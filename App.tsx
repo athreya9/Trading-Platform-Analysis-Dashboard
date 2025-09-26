@@ -1,10 +1,34 @@
-// FINAL: Dashboard component integration
 import React, { useState, useEffect } from 'react';
+import { createTheme, ThemeProvider, CssBaseline, Container, Grid } from '@mui/material';
+import Header from './components/Header';
 import { SystemControls } from './components/SystemControls';
-import { fetchDashboardData } from './services/apiService';
 import TradesTable from './components/TradesTable';
+import { fetchDashboardData } from './services/apiService';
 
-const Dashboard: React.FC = () => {
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+    primary: {
+      main: '#4ecca3',
+    },
+    secondary: {
+      main: '#ff9a3d',
+    },
+    background: {
+      default: '#0d0d1a',
+      paper: '#1a1a2e',
+    },
+    text: {
+      primary: '#eeeeee',
+      secondary: '#b0b0b0',
+    },
+  },
+  typography: {
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
+  },
+});
+
+const App: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [systemStatus, setSystemStatus] = useState({
     botStatus: 'stopped',
@@ -13,15 +37,27 @@ const Dashboard: React.FC = () => {
     lastSignal: ''
   });
 
-  // Determine system status based on current time
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const data = await fetchDashboardData();
+        setDashboardData(data);
+        setSystemStatus(determineSystemStatus());
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+      }
+    };
+
+    loadData();
+    const interval = setInterval(loadData, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   const determineSystemStatus = () => {
     const now = new Date();
     const hours = now.getHours();
     const day = now.getDay();
-    
-    // Simple market hours check (9:15 AM - 3:30 PM IST, Mon-Fri)
     const isMarketOpen = day >= 1 && day <= 5 && hours >= 9 && hours < 16;
-    
     return {
       botStatus: isMarketOpen ? 'running' : 'stopped',
       marketStatus: isMarketOpen ? 'open' : 'closed',
@@ -37,43 +73,32 @@ const Dashboard: React.FC = () => {
   };
 
   const getLastSignalTime = () => {
-    // This would come from your actual data
     return 'BANKNIFTY CE - 2 hours ago';
   };
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const data = await fetchDashboardData();
-        setDashboardData(data);
-        setSystemStatus(determineSystemStatus());
-      } catch (error) {
-        console.error('Failed to load dashboard data:', error);
-      }
-    };
-
-    loadData();
-    // Refresh every 60 seconds
-    const interval = setInterval(loadData, 60000);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      <SystemControls 
-        botStatus={systemStatus.botStatus}
-        marketStatus={systemStatus.marketStatus}
-        nextTraining={systemStatus.nextTraining}
-        lastSignal={systemStatus.lastSignal}
-      />
-
-      {dashboardData && (
-        <div>
-          <TradesTable trades={dashboardData.trades} />
-        </div>
-      )}
-    </div>
+    <ThemeProvider theme={darkTheme}>
+      <CssBaseline />
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        <Header />
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <SystemControls
+              botStatus={systemStatus.botStatus}
+              marketStatus={systemStatus.marketStatus}
+              nextTraining={systemStatus.nextTraining}
+              lastSignal={systemStatus.lastSignal}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            {dashboardData && (
+              <TradesTable trades={dashboardData.trades} />
+            )}
+          </Grid>
+        </Grid>
+      </Container>
+    </ThemeProvider>
   );
 };
 
-export default Dashboard;
+export default App;
