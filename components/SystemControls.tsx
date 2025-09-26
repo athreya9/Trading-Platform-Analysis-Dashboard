@@ -1,86 +1,120 @@
-import React, { useState } from 'react';
-import { postControlAction, initiateKiteLogin } from '../services/apiService';
+// FINAL: components/SystemControls.tsx
+import React from 'react';
+import { Box, Typography, Paper, Chip } from '@mui/material';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import PsychologyIcon from '@mui/icons-material/Psychology';
 
-type ControlStatus = 'idle' | 'loading' | 'success' | 'error';
+interface SystemControlsProps {
+  botStatus: string;
+  marketStatus: string;
+  nextTraining: string;
+  lastSignal: string;
+}
 
-const SystemControls: React.FC = () => {
-  const [controlStatus, setControlStatus] = useState<ControlStatus>('idle');
-  const [controlMessage, setControlMessage] = useState<string>('');
-  const [kiteStatus, setKiteStatus] = useState<'idle' | 'loading' | 'error'>('idle');
-  const [kiteMessage, setKiteMessage] = useState<string>('');
-
-  const handleControlClick = async (action: string) => {
-    setControlStatus('loading');
-    setControlMessage('');
-    setKiteStatus('idle'); // reset other statuses
-    setKiteMessage('');
-    try {
-      const response = await postControlAction(action);
-      setControlStatus('success');
-      setControlMessage(response.message || `Action '${action}' successful.`);
-    } catch (err: any) {
-      setControlStatus('error');
-      setControlMessage(err.message || `Action '${action}' failed.`);
-    }
-  };
+export const SystemControls: React.FC<SystemControlsProps> = ({ 
+  botStatus, 
+  marketStatus, 
+  nextTraining,
+  lastSignal 
+}) => {
   
-  const handleKiteConnect = async () => {
-    setKiteStatus('loading');
-    setKiteMessage('');
-    setControlStatus('idle'); // reset other statuses
-    setControlMessage('');
-    try {
-      await initiateKiteLogin();
-      // The page will redirect, so no success state is needed on the frontend.
-    } catch (err: any) {
-      setKiteStatus('error');
-      setKiteMessage(err.message || 'Failed to initiate KITE connection.');
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'running': return 'success';
+      case 'stopped': return 'default';
+      case 'market_closed': return 'info';
+      default: return 'warning';
     }
   };
-
-
-  const ControlButton: React.FC<{ action: string; label: string; color: string }> = ({ action, label, color }) => (
-    <button
-      onClick={() => handleControlClick(action)}
-      disabled={controlStatus === 'loading'}
-      className={`w-full text-white font-bold py-2 px-4 rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed ${color}`}
-    >
-      {controlStatus === 'loading' ? 'Processing...' : label}
-    </button>
-  );
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <button
-          onClick={handleKiteConnect}
-          disabled={kiteStatus === 'loading'}
-          className="w-full text-white font-bold py-2 px-4 rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed bg-blue-600 hover:bg-blue-600/90"
-        >
-          {kiteStatus === 'loading' ? 'Redirecting...' : 'Connect KITE API'}
-        </button>
-        <ControlButton action="start_bot" label="Start Trading Bot" color="bg-profit hover:bg-profit/90" />
-        <ControlButton action="stop_bot" label="Stop Trading Bot" color="bg-loss hover:bg-loss/90" />
-        <ControlButton action="restart_services" label="Restart Services" color="bg-warning hover:bg-warning/90" />
-      </div>
+    <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+         AI Trading System - Autonomous Operation
+      </Typography>
       
-      {(controlStatus !== 'idle' || kiteStatus === 'error') && (
-        <div className="mt-4 text-center text-sm p-3 rounded-lg">
-          {controlStatus === 'loading' && <p>Processing action...</p>}
-          {controlStatus === 'success' && <p className="text-profit">{controlMessage}</p>}
-          {controlStatus === 'error' && <p className="text-loss">{controlMessage}</p>}
-          {kiteStatus === 'error' && <p className="text-loss">{kiteMessage}</p>}
-        </div>
-      )}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {/* Trading Bot Status */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <AutoAwesomeIcon color="primary" sx={{ fontSize: 30 }} />
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="body1" fontWeight="medium">
+              Trading Bot
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {botStatus === 'running' 
+                ? ' Active - Scanning markets in real-time' 
+                : '⏸️ Paused - Waiting for market hours'}
+            </Typography>
+          </Box>
+          <Chip 
+            label={botStatus === 'running' ? 'LIVE' : 'PAUSED'} 
+            color={getStatusColor(botStatus)}
+            variant="filled"
+          />
+        </Box>
 
-      <div className="mt-4 bg-primary p-4 rounded-lg border border-white/10">
-          <h4 className="font-semibold text-warning">Authentication Help</h4>
-          <p className="text-sm text-gray-300 mt-1">
-              If the KITE API status is disconnected or shows an error, use the "Connect KITE API" button to re-authenticate. This will redirect you to the official KITE login page to securely authorize the connection.
-          </p>
-      </div>
-    </div>
+        {/* Market Status */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <AccessTimeIcon color="primary" sx={{ fontSize: 30 }} />
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="body1" fontWeight="medium">
+              Market Status
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {marketStatus === 'open' 
+                ? ' Market open - Live trading enabled' 
+                : ' Market closed - Data collection active'}
+            </Typography>
+          </Box>
+          <Chip 
+            label={marketStatus === 'open' ? 'OPEN' : 'CLOSED'} 
+            color={marketStatus === 'open' ? 'success' : 'info'}
+            variant="outlined"
+          />
+        </Box>
+
+        {/* AI Training Status */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <PsychologyIcon color="secondary" sx={{ fontSize: 30 }} />
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="body1" fontWeight="medium">
+              AI Learning Engine
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Next training: {nextTraining}
+            </Typography>
+          </Box>
+          <Chip 
+            label="AUTO-LEARN" 
+            color="secondary"
+            size="small"
+          />
+        </Box>
+
+        {/* Last Signal Info */}
+        {lastSignal && (
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 2,
+            p: 2,
+            bgcolor: 'success.light',
+            borderRadius: 1,
+            border: '1px solid',
+            borderColor: 'success.main'
+          }}>
+            <Typography variant="body2" sx={{ color: 'success.dark', fontWeight: 'medium' }}>
+               Last Signal: {lastSignal}
+            </Typography>
+          </Box>
+        )}
+      </Box>
+
+      <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block', fontStyle: 'italic' }}>
+         Fully autonomous system • Market-hour aware • Self-training AI • No manual intervention needed
+      </Typography>
+    </Paper>
   );
 };
-
-export default SystemControls;

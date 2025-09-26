@@ -1,5 +1,5 @@
 
-import { API_BASE_URL } from '../config';
+import { API_BASE_URL, GITHUB_RAW_URL } from '../config';
 import type { Status, Trade } from '../types';
 
 interface DashboardDataResponse {
@@ -31,7 +31,51 @@ const apiFetch = async <T>(endpoint: string, options: RequestInit = {}): Promise
 };
 
 export const fetchDashboardData = async (): Promise<DashboardDataResponse> => {
-  return await apiFetch<DashboardDataResponse>('dashboard-data');
+  try {
+    // Fetch trades and bot status in parallel
+    const [tradesResponse, botStatusResponse] = await Promise.all([
+      fetch(`${GITHUB_RAW_URL}/trade_log.json`),
+      fetch(`${GITHUB_RAW_URL}/bot_control.json`)
+    ]);
+
+    if (!tradesResponse.ok || !botStatusResponse.ok) {
+      // If a file is not found, we don't want to crash the whole app
+      console.warn('Could not fetch one or more data files from GitHub. This may be expected if the bot has not run yet.');
+    }
+
+    const rawTrades = tradesResponse.ok ? await tradesResponse.json() : [];
+    const rawBotStatus = botStatusResponse.ok ? await botStatusResponse.json() : [];
+
+    // Map raw trade data to the frontend Trade type
+    const trades: Trade[] = (rawTrades || []).map((trade: any) => ({
+      ticker: trade.instrument || 'N/A',
+      type: trade.position_size > 0 ? 'Buy' : 'Sell', // Assuming position_size indicates buy/sell
+      price: trade.underlying_price ? parseFloat(trade.underlying_price).toFixed(2) : '0.00',
+      pnl: trade['P/L'] || '0.00',
+      status: parseFloat(trade['P/L']) >= 0 ? 'profit' : 'loss',
+    })).reverse(); // Show most recent trades first
+
+    // Create status from bot control data
+    const latestBotStatus = rawBotStatus.length > 0 ? rawBotStatus[rawBotStatus.length - 1] : null;
+    const isBotRunning = latestBotStatus && latestBotStatus.status === 'running';
+    const statuses: Status[] = [
+      { name: 'Trading Bot', status: isBotRunning ? 'connected' : 'disconnected' },
+      { name: 'KITE API', status: 'disconnected' }, // Placeholder, as we don't have this info from JSON files
+      { name: 'Market Data', status: 'connected' }, // Placeholder
+    ];
+
+    return { statuses, trades };
+
+  } catch (error: any) {
+    console.error('Failed to fetch or process dashboard data from GitHub:', error);
+    // Return empty data on error to avoid crashing the UI
+    const statuses: Status[] = [
+        { name: 'Trading Bot', status: 'disconnected' },
+        { name: 'KITE API', status: 'disconnected' },
+        { name: 'Market Data', status: 'disconnected' },
+    ];
+    return { statuses, trades: [] };
+  }
 };
 
 export const postControlAction = async (action: string): Promise<{ message: string }> => {
