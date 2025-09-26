@@ -1,0 +1,21 @@
+{
+  "name": "DA AI Trading Platform",
+  "short_name": "DA AI",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0d0d1a",
+  "theme_color": "#4ecca3",
+  "description": "Autonomous AI Trading Platform Dashboard",
+  "icons": [
+    {
+      "src": "/DA.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/DA.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
