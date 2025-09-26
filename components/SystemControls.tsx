@@ -1,9 +1,9 @@
-// FINAL: components/SystemControls.tsx
 import React from 'react';
-import { Box, Typography, Paper, Chip } from '@mui/material';
+import { Paper, Typography, Box, Chip, Grid } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import PsychologyIcon from '@mui/icons-material/Psychology';
+import SignalCellularAltIcon from '@mui/icons-material/SignalCellularAlt';
 
 interface SystemControlsProps {
   botStatus: string;
@@ -12,109 +12,72 @@ interface SystemControlsProps {
   lastSignal: string;
 }
 
-export const SystemControls: React.FC<SystemControlsProps> = ({ 
-  botStatus, 
-  marketStatus, 
+const StatusItem: React.FC<{ icon: React.ReactNode; label: string; value: string; chipLabel: string; chipColor: any }> = ({ icon, label, value, chipLabel, chipColor }) => (
+  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, backgroundColor: 'background.paper', borderRadius: 2 }}>
+    {icon}
+    <Box sx={{ flex: 1 }}>
+      <Typography variant="body1" fontWeight="medium">
+        {label}
+      </Typography>
+      <Typography variant="body2" color="text.secondary">
+        {value}
+      </Typography>
+    </Box>
+    <Chip label={chipLabel} color={chipColor} variant="filled" />
+  </Box>
+);
+
+export const SystemControls: React.FC<SystemControlsProps> = ({
+  botStatus,
+  marketStatus,
   nextTraining,
-  lastSignal 
+  lastSignal
 }) => {
-  
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'running': return 'success';
-      case 'stopped': return 'default';
-      case 'market_closed': return 'info';
-      default: return 'warning';
-    }
-  };
-
   return (
-    <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-         AI Trading System - Autonomous Operation
+    <Paper elevation={3} sx={{ p: 3 }}>
+      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+        System Status
       </Typography>
-      
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {/* Trading Bot Status */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <AutoAwesomeIcon color="primary" sx={{ fontSize: 30 }} />
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="body1" fontWeight="medium">
-              Trading Bot
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {botStatus === 'running' 
-                ? ' Active - Scanning markets in real-time' 
-                : '⏸️ Paused - Waiting for market hours'}
-            </Typography>
-          </Box>
-          <Chip 
-            label={botStatus === 'running' ? 'LIVE' : 'PAUSED'} 
-            color={getStatusColor(botStatus)}
-            variant="filled"
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <StatusItem
+            icon={<AutoAwesomeIcon color="primary" />}
+            label="Trading Bot"
+            value={botStatus === 'running' ? 'Active - Scanning markets' : 'Paused - Waiting for market hours'}
+            chipLabel={botStatus === 'running' ? 'LIVE' : 'PAUSED'}
+            chipColor={botStatus === 'running' ? 'success' : 'default'}
           />
-        </Box>
-
-        {/* Market Status */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <AccessTimeIcon color="primary" sx={{ fontSize: 30 }} />
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="body1" fontWeight="medium">
-              Market Status
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {marketStatus === 'open' 
-                ? ' Market open - Live trading enabled' 
-                : ' Market closed - Data collection active'}
-            </Typography>
-          </Box>
-          <Chip 
-            label={marketStatus === 'open' ? 'OPEN' : 'CLOSED'} 
-            color={marketStatus === 'open' ? 'success' : 'info'}
-            variant="outlined"
+        </Grid>
+        <Grid item xs={12}>
+          <StatusItem
+            icon={<AccessTimeIcon color="primary" />}
+            label="Market Status"
+            value={marketStatus === 'open' ? 'Market open - Live trading enabled' : 'Market closed - Data collection active'}
+            chipLabel={marketStatus === 'open' ? 'OPEN' : 'CLOSED'}
+            chipColor={marketStatus === 'open' ? 'success' : 'info'}
           />
-        </Box>
-
-        {/* AI Training Status */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <PsychologyIcon color="secondary" sx={{ fontSize: 30 }} />
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="body1" fontWeight="medium">
-              AI Learning Engine
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Next training: {nextTraining}
-            </Typography>
-          </Box>
-          <Chip 
-            label="AUTO-LEARN" 
-            color="secondary"
-            size="small"
+        </Grid>
+        <Grid item xs={12}>
+          <StatusItem
+            icon={<PsychologyIcon color="secondary" />}
+            label="AI Learning Engine"
+            value={`Next training: ${nextTraining}`}
+            chipLabel="AUTO-LEARN"
+            chipColor="secondary"
           />
-        </Box>
-
-        {/* Last Signal Info */}
+        </Grid>
         {lastSignal && (
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: 2,
-            p: 2,
-            bgcolor: 'success.light',
-            borderRadius: 1,
-            border: '1px solid',
-            borderColor: 'success.main'
-          }}>
-            <Typography variant="body2" sx={{ color: 'success.dark', fontWeight: 'medium' }}>
-               Last Signal: {lastSignal}
-            </Typography>
-          </Box>
+          <Grid item xs={12}>
+            <StatusItem
+              icon={<SignalCellularAltIcon color="primary" />}
+              label="Last Signal"
+              value={lastSignal}
+              chipLabel="RECENT"
+              chipColor="primary"
+            />
+          </Grid>
         )}
-      </Box>
-
-      <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block', fontStyle: 'italic' }}>
-         Fully autonomous system • Market-hour aware • Self-training AI • No manual intervention needed
-      </Typography>
+      </Grid>
     </Paper>
   );
 };

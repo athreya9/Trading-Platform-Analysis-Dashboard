@@ -1,5 +1,6 @@
 import React from 'react';
 import { Trade } from '../types';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography, Chip } from '@mui/material';
 
 interface TradesTableProps {
   trades: Trade[];
@@ -7,35 +8,53 @@ interface TradesTableProps {
 
 const TradesTable: React.FC<TradesTableProps> = ({ trades }) => {
   if (!trades || trades.length === 0) {
-    return <p>No trades to display.</p>;
+    return (
+      <Paper elevation={3} sx={{ p: 3, textAlign: 'center' }}>
+        <Typography variant="body1" color="text.secondary">
+          No recent trades to display.
+        </Typography>
+      </Paper>
+    );
   }
 
   return (
-    <div style={{ marginTop: '20px' }}>
-      <h2>Recent Trades</h2>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr>
-            <th style={{ border: '1px solid #ddd', padding: '8px' }}>Ticker</th>
-            <th style={{ border: '1px solid #ddd', padding: '8px' }}>Type</th>
-            <th style={{ border: '1px solid #ddd', padding: '8px' }}>Price</th>
-            <th style={{ border: '1px solid #ddd', padding: '8px' }}>P/L</th>
-            <th style={{ border: '1px solid #ddd', padding: '8px' }}>Status</th>
-          </tr>
-        </thead>
-        <tbody>
+    <TableContainer component={Paper} elevation={3}>
+      <Typography variant="h6" sx={{ p: 2, fontWeight: 'bold' }}>
+        Recent Trades
+      </Typography>
+      <Table aria-label="recent trades table">
+        <TableHead>
+          <TableRow>
+            <TableCell sx={{ fontWeight: 'bold' }}>Ticker</TableCell>
+            <TableCell align="right" sx={{ fontWeight: 'bold' }}>Type</TableCell>
+            <TableCell align="right" sx={{ fontWeight: 'bold' }}>Price</TableCell>
+            <TableCell align="right" sx={{ fontWeight: 'bold' }}>P/L</TableCell>
+            <TableCell align="right" sx={{ fontWeight: 'bold' }}>Status</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
           {trades.map((trade, index) => (
-            <tr key={index}>
-              <td style={{ border: '1px solid #ddd', padding: '8px' }}>{trade.ticker}</td>
-              <td style={{ border: '1px solid #ddd', padding: '8px' }}>{trade.type}</td>
-              <td style={{ border: '1px solid #ddd', padding: '8px' }}>{trade.price}</td>
-              <td style={{ border: '1px solid #ddd', padding: '8px' }}>{trade.pnl}</td>
-              <td style={{ border: '1px solid #ddd', padding: '8px', color: trade.status === 'profit' ? 'green' : 'red' }}>{trade.status}</td>
-            </tr>
+            <TableRow key={index}>
+              <TableCell component="th" scope="row">
+                {trade.ticker}
+              </TableCell>
+              <TableCell align="right">{trade.type}</TableCell>
+              <TableCell align="right">{trade.price}</TableCell>
+              <TableCell align="right" sx={{ color: trade.status === 'profit' ? 'primary.main' : 'error.main' }}>
+                {trade.pnl}
+              </TableCell>
+              <TableCell align="right">
+                <Chip
+                  label={trade.status}
+                  color={trade.status === 'profit' ? 'success' : 'error'}
+                  size="small"
+                />
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 };
 
