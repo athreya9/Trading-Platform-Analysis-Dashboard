@@ -14,6 +14,10 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      preview: {
+        port: parseInt(process.env.PORT) || 8080,
+        host: '0.0.0.0'
       }
     };
 });
