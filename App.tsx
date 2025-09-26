@@ -82,7 +82,7 @@ const App: React.FC = () => {
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         <Header />
         <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
             <SystemControls
               botStatus={systemStatus.botStatus}
               marketStatus={systemStatus.marketStatus}
@@ -90,7 +90,7 @@ const App: React.FC = () => {
               lastSignal={systemStatus.lastSignal}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
             {dashboardData && (
               <TradesTable trades={dashboardData.trades} />
             )}

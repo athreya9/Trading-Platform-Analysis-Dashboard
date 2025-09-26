@@ -9,7 +9,7 @@ interface TradesTableProps {
 const TradesTable: React.FC<TradesTableProps> = ({ trades }) => {
   if (!trades || trades.length === 0) {
     return (
-      <Paper elevation={3} sx={{ p: 3, textAlign: 'center' }}>
+      <Paper elevation={3} sx={{ p: 3, textAlign: 'center', flexGrow: 1 }}>
         <Typography variant="body1" color="text.secondary">
           No recent trades to display.
         </Typography>
@@ -18,7 +18,7 @@ const TradesTable: React.FC<TradesTableProps> = ({ trades }) => {
   }
 
   return (
-    <TableContainer component={Paper} elevation={3}>
+    <TableContainer component={Paper} elevation={3} sx={{ flexGrow: 1 }}>
       <Typography variant="h6" sx={{ p: 2, fontWeight: 'bold' }}>
         Recent Trades
       </Typography>

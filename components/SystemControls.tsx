@@ -34,7 +34,7 @@ export const SystemControls: React.FC<SystemControlsProps> = ({
   lastSignal
 }) => {
   return (
-    <Paper elevation={3} sx={{ p: 3 }}>
+    <Paper elevation={3} sx={{ p: 3, flexGrow: 1 }}>
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
         System Status
       </Typography>
