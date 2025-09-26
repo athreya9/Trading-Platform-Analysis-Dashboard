@@ -31,12 +31,19 @@ const apiFetch = async <T>(endpoint: string, options: RequestInit = {}): Promise
 };
 
 export const fetchDashboardData = async (): Promise<DashboardDataResponse> => {
+  console.log(' Fetching data from GitHub...');
+
   try {
     // Fetch trades and bot status in parallel
     const [tradesResponse, botStatusResponse] = await Promise.all([
-      fetch(`${GITHUB_RAW_URL}/trade_log.json`),
-      fetch(`${GITHUB_RAW_URL}/bot_control.json`)
+      fetch(`${GITHUB_RAW_URL}/trade_log.json?t=${Date.now()}`), // Cache bust
+      fetch(`${GITHUB_RAW_URL}/bot_control.json?t=${Date.now()}`)
     ]);
+
+    console.log(' Response status:', {
+      trades: tradesResponse.status,
+      botStatus: botStatusResponse.status
+    });
 
     if (!tradesResponse.ok || !botStatusResponse.ok) {
       // If a file is not found, we don't want to crash the whole app
@@ -67,7 +74,7 @@ export const fetchDashboardData = async (): Promise<DashboardDataResponse> => {
     return { statuses, trades };
 
   } catch (error: any) {
-    console.error('Failed to fetch or process dashboard data from GitHub:', error);
+    console.error('❌ Full error details:', error);
     // Return empty data on error to avoid crashing the UI
     const statuses: Status[] = [
         { name: 'Trading Bot', status: 'disconnected' },
