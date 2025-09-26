@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { SystemControls } from './components/SystemControls';
 import { fetchDashboardData } from './services/apiService';
+import TradesTable from './components/TradesTable';
 
 const Dashboard: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<any>(null);
@@ -65,11 +66,10 @@ const Dashboard: React.FC = () => {
         nextTraining={systemStatus.nextTraining}
         lastSignal={systemStatus.lastSignal}
       />
-      
-      {/* Your existing dashboard content */}
+
       {dashboardData && (
         <div>
-          {/* Trades display, charts, etc. */}
+          <TradesTable trades={dashboardData.trades} />
         </div>
       )}
     </div>
