@@ -5,6 +5,7 @@ import { SystemControls } from './components/SystemControls';
 import TradesTable from './components/TradesTable';
 import { fetchDashboardData } from './services/apiService';
 import { checkIndianMarketHours } from './src/utils/marketHours';
+import TradingSignals from './components/TradingSignals';
 
 const darkTheme = createTheme({
   palette: {
@@ -130,6 +131,11 @@ const App: React.FC = () => {
               <Typography>Market is closed. Real data is only available during market hours.</Typography>
             )}
           </Grid>
+          {checkIndianMarketHours(new Date()) && (
+            <Grid item xs={12}>
+              <TradingSignals />
+            </Grid>
+          )}
         </Grid>
       </Container>
     </ThemeProvider>
