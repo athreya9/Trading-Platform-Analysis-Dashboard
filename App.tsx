@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { createTheme, ThemeProvider, CssBaseline, Container, Grid } from '@mui/material';
+import { createTheme, ThemeProvider, CssBaseline, Container, Grid, CircularProgress, Typography } from '@mui/material';
 import Header from './components/Header';
 import { SystemControls } from './components/SystemControls';
 import TradesTable from './components/TradesTable';
 import { fetchDashboardData } from './services/apiService';
+import { checkIndianMarketHours } from './src/utils/marketHours';
 
 const darkTheme = createTheme({
   palette: {
@@ -30,21 +31,34 @@ const darkTheme = createTheme({
 
 const App: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<any>(null);
-  const [systemStatus, setSystemStatus] = useState({
+  const [systemStatus, setSystemStatus] = useState<{
+    botStatus: string;
+    marketStatus: string | null;
+    nextTraining: string;
+    lastSignal: string;
+  }>({
     botStatus: 'stopped',
-    marketStatus: 'closed',
+    marketStatus: null, // Initial state: loading
     nextTraining: 'Next Monday',
     lastSignal: ''
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const data = await fetchDashboardData();
-        setDashboardData(data);
+        const isMarketOpen = checkIndianMarketHours(new Date());
+        if (isMarketOpen) {
+          const data = await fetchDashboardData();
+          setDashboardData(data);
+        }
         setSystemStatus(determineSystemStatus());
+        setLoading(false);
       } catch (error) {
         console.error('Failed to load dashboard data:', error);
+        setError('Failed to load dashboard data. Please try again later.');
+        setLoading(false);
       }
     };
 
@@ -54,10 +68,7 @@ const App: React.FC = () => {
   }, []);
 
   const determineSystemStatus = () => {
-    const now = new Date();
-    const hours = now.getHours();
-    const day = now.getDay();
-    const isMarketOpen = day >= 1 && day <= 5 && hours >= 9 && hours < 16;
+    const isMarketOpen = checkIndianMarketHours(new Date());
     return {
       botStatus: isMarketOpen ? 'running' : 'stopped',
       marketStatus: isMarketOpen ? 'open' : 'closed',
@@ -76,6 +87,28 @@ const App: React.FC = () => {
     return 'BANKNIFTY CE - 2 hours ago';
   };
 
+  if (loading) {
+    return (
+      <ThemeProvider theme={darkTheme}>
+        <CssBaseline />
+        <Container maxWidth="lg" sx={{ mt: 4, mb: 4, display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+          <CircularProgress />
+        </Container>
+      </ThemeProvider>
+    );
+  }
+
+  if (error) {
+    return (
+      <ThemeProvider theme={darkTheme}>
+        <CssBaseline />
+        <Container maxWidth="lg" sx={{ mt: 4, mb: 4, display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+          <Typography color="error">{error}</Typography>
+        </Container>
+      </ThemeProvider>
+    );
+  }
+
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
@@ -91,8 +124,10 @@ const App: React.FC = () => {
             />
           </Grid>
           <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
-            {dashboardData && (
+            {checkIndianMarketHours(new Date()) && dashboardData ? (
               <TradesTable trades={dashboardData.trades} />
+            ) : (
+              <Typography>Market is closed. Real data is only available during market hours.</Typography>
             )}
           </Grid>
         </Grid>

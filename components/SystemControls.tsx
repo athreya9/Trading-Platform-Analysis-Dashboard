@@ -1,5 +1,5 @@
 import React from 'react';
-import { Paper, Typography, Box, Chip, Grid } from '@mui/material';
+import { Paper, Typography, Box, Chip, Grid, CircularProgress } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import PsychologyIcon from '@mui/icons-material/Psychology';
@@ -7,12 +7,12 @@ import SignalCellularAltIcon from '@mui/icons-material/SignalCellularAlt';
 
 interface SystemControlsProps {
   botStatus: string;
-  marketStatus: string;
+  marketStatus: string | null;
   nextTraining: string;
   lastSignal: string;
 }
 
-const StatusItem: React.FC<{ icon: React.ReactNode; label: string; value: string; chipLabel: string; chipColor: any }> = ({ icon, label, value, chipLabel, chipColor }) => (
+const StatusItem: React.FC<{ icon: React.ReactNode; label: string; value: string; chipLabel?: string; chipColor?: any }> = ({ icon, label, value, chipLabel, chipColor }) => (
   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, backgroundColor: 'background.paper', borderRadius: 2 }}>
     {icon}
     <Box sx={{ flex: 1 }}>
@@ -23,9 +23,30 @@ const StatusItem: React.FC<{ icon: React.ReactNode; label: string; value: string
         {value}
       </Typography>
     </Box>
-    <Chip label={chipLabel} color={chipColor} variant="filled" />
+    {chipLabel && <Chip label={chipLabel} color={chipColor} variant="filled" />}
   </Box>
 );
+
+const MarketStatus: React.FC<{ status: string | null }> = ({ status }) => {
+  if (status === null) {
+    return <StatusItem icon={<CircularProgress size={24} />} label="Market Status" value="Loading..." />;
+  }
+
+  if (status === 'unavailable') {
+    return <StatusItem icon={<AccessTimeIcon color="error" />} label="Market Status" value="Status unavailable" chipLabel="ERROR" chipColor="error" />;
+  }
+
+  const isOpen = status === 'open';
+  return (
+    <StatusItem
+      icon={<AccessTimeIcon color="primary" />}
+      label="Market Status"
+      value={isOpen ? 'Market open - Live trading enabled' : 'Market closed - Data collection active'}
+      chipLabel={isOpen ? 'OPEN' : 'CLOSED'}
+      chipColor={isOpen ? 'success' : 'info'}
+    />
+  );
+};
 
 export const SystemControls: React.FC<SystemControlsProps> = ({
   botStatus,
@@ -49,13 +70,7 @@ export const SystemControls: React.FC<SystemControlsProps> = ({
           />
         </Grid>
         <Grid item xs={12}>
-          <StatusItem
-            icon={<AccessTimeIcon color="primary" />}
-            label="Market Status"
-            value={marketStatus === 'open' ? 'Market open - Live trading enabled' : 'Market closed - Data collection active'}
-            chipLabel={marketStatus === 'open' ? 'OPEN' : 'CLOSED'}
-            chipColor={marketStatus === 'open' ? 'success' : 'info'}
-          />
+          <MarketStatus status={marketStatus} />
         </Grid>
         <Grid item xs={12}>
           <StatusItem
