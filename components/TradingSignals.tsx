@@ -33,7 +33,9 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ signals }) => {
                 )}
               </Box>
               <Typography variant="body1"><strong>Signal:</strong> {signal.signal}</Typography>
-              <Typography variant="body1"><strong>Confidence:</strong> {signal.confidence}%</Typography>
+              <Typography variant="body1"><strong>Confidence:</strong> {signal.confidence.toFixed(2)}%</Typography>
+              <Typography variant="body1"><strong>Technical Score:</strong> {signal.technical_score.toFixed(2)}</Typography>
+              <Typography variant="body2" sx={{ mt: 1 }}>{signal.reasoning}</Typography>
             </Paper>
           </Grid>
         ))}

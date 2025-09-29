@@ -28,4 +28,6 @@ export interface Signal {
   trend: string;
   signal: string;
   confidence: number;
+  reasoning: string;
+  technical_score: number;
 }
