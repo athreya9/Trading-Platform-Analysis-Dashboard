@@ -22,3 +22,10 @@ export interface AiSignalData {
     action: string;
   }[];
 }
+
+export interface Signal {
+  instrument: string;
+  trend: string;
+  signal: string;
+  confidence: number;
+}

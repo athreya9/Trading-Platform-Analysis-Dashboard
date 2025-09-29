@@ -49,11 +49,8 @@ const App: React.FC = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const isMarketOpen = checkIndianMarketHours(new Date());
-        if (isMarketOpen) {
-          const data = await fetchDashboardData();
-          setDashboardData(data);
-        }
+        const data = await fetchDashboardData();
+        setDashboardData(data);
         setSystemStatus(determineSystemStatus());
         setLoading(false);
       } catch (error) {
@@ -125,15 +122,15 @@ const App: React.FC = () => {
             />
           </Grid>
           <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
-            {checkIndianMarketHours(new Date()) && dashboardData ? (
+            {dashboardData ? (
               <TradesTable trades={dashboardData.trades} />
             ) : (
-              <Typography>Market is closed. Real data is only available during market hours.</Typography>
+              <Typography>No trade data available.</Typography>
             )}
           </Grid>
-          {checkIndianMarketHours(new Date()) && (
+          {dashboardData && dashboardData.signals && (
             <Grid item xs={12}>
-              <TradingSignals />
+              <TradingSignals signals={dashboardData.signals} />
             </Grid>
           )}
         </Grid>

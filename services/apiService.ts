@@ -1,108 +1,60 @@
 
-import { API_BASE_URL, GITHUB_RAW_URL } from '../config';
-import type { Status, Trade } from '../types';
+import { GITHUB_RAW_URL } from '../config';
+import type { Status, Trade, Signal } from '../types';
 
 interface DashboardDataResponse {
   statuses: Status[];
   trades: Trade[];
+  signals: Signal[];
 }
 
-const apiFetch = async <T>(endpoint: string, options: RequestInit = {}): Promise<T> => {
-  const url = `${API_BASE_URL}/${endpoint}`;
-  try {
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: `HTTP error! status: ${response.status}` }));
-      throw new Error(errorData.message || `An unknown server error occurred.`);
-    }
-
-    return await response.json();
-  } catch (error: any) {
-    console.error(`API call to ${url} failed:`, error);
-    throw new Error(error.message || 'Network request failed. Please check your connection or the API server.');
-  }
-};
-
 export const fetchDashboardData = async (): Promise<DashboardDataResponse> => {
-  console.log(' Fetching data from GitHub...');
+  console.log('Fetching data from GitHub...');
 
   try {
-    // Fetch trades and bot status in parallel
-    const [tradesResponse, botStatusResponse] = await Promise.all([
-      fetch(`${GITHUB_RAW_URL}/trade_log.json?t=${Date.now()}`), // Cache bust
-      fetch(`${GITHUB_RAW_URL}/bot_control.json?t=${Date.now()}`)
+    const [tradesResponse, botStatusResponse, signalsResponse] = await Promise.all([
+      fetch(`${GITHUB_RAW_URL}/trade_log.json?t=${Date.now()}`),
+      fetch(`${GITHUB_RAW_URL}/bot_control.json?t=${Date.now()}`),
+      fetch(`${GITHUB_RAW_URL}/signals.json?t=${Date.now()}`),
     ]);
 
-    console.log(' Response status:', {
-      trades: tradesResponse.status,
-      botStatus: botStatusResponse.status
-    });
-
-    if (!tradesResponse.ok || !botStatusResponse.ok) {
-      // If a file is not found, we don't want to crash the whole app
-      console.warn('Could not fetch one or more data files from GitHub. This may be expected if the bot has not run yet.');
+    if (!tradesResponse.ok) {
+      console.warn('Could not fetch trade_log.json from GitHub.');
+    }
+    if (!botStatusResponse.ok) {
+      console.warn('Could not fetch bot_control.json from GitHub.');
+    }
+    if (!signalsResponse.ok) {
+      console.warn('Could not fetch signals.json from GitHub.');
     }
 
     const rawTrades = tradesResponse.ok ? await tradesResponse.json() : [];
     const rawBotStatus = botStatusResponse.ok ? await botStatusResponse.json() : [];
+    const signals = signalsResponse.ok ? await signalsResponse.json() : [];
 
-    // Map raw trade data to the frontend Trade type
     const trades: Trade[] = (rawTrades || []).map((trade: any) => ({
       ticker: trade.instrument || 'N/A',
-      type: trade.position_size > 0 ? 'Buy' : 'Sell', // Assuming position_size indicates buy/sell
+      type: trade.position_size > 0 ? 'Buy' : 'Sell',
       price: trade.underlying_price ? parseFloat(trade.underlying_price).toFixed(2) : '0.00',
       pnl: trade['P/L'] || '0.00',
       status: parseFloat(trade['P/L']) >= 0 ? 'profit' : 'loss',
-    })).reverse(); // Show most recent trades first
+    })).reverse();
 
-    // Create status from bot control data
     const latestBotStatus = rawBotStatus.length > 0 ? rawBotStatus[rawBotStatus.length - 1] : null;
     const isBotRunning = latestBotStatus && latestBotStatus.status === 'running';
     const statuses: Status[] = [
       { name: 'Trading Bot', status: isBotRunning ? 'connected' : 'disconnected' },
-      { name: 'KITE API', status: 'disconnected' }, // Placeholder, as we don't have this info from JSON files
-      { name: 'Market Data', status: 'connected' }, // Placeholder
+      { name: 'Data Source', status: 'connected' },
     ];
 
-    return { statuses, trades };
+    return { statuses, trades, signals };
 
   } catch (error: any) {
-    console.error('❌ Full error details:', error);
-    // Return empty data on error to avoid crashing the UI
+    console.error('Error fetching dashboard data:', error);
     const statuses: Status[] = [
         { name: 'Trading Bot', status: 'disconnected' },
-        { name: 'KITE API', status: 'disconnected' },
-        { name: 'Market Data', status: 'disconnected' },
+        { name: 'Data Source', status: 'disconnected' },
     ];
-    return { statuses, trades: [] };
+    return { statuses, trades: [], signals: [] };
   }
-};
-
-export const postControlAction = async (action: string): Promise<{ message: string }> => {
-  return await apiFetch<{ message: string }>('control', {
-    method: 'POST',
-    body: JSON.stringify({ action }),
-  });
-};
-
-export const initiateKiteLogin = async (): Promise<void> => {
-  window.location.href = `${API_BASE_URL}/kite-login`;
-};
-
-export const checkApiHealth = async (): Promise<{ status: 'ok' | string }> => {
-    return await apiFetch<{ status: 'ok' | string }>('health');
-};
-
-export const handleKiteAuthCallback = async (requestToken: string): Promise<{ message: string }> => {
-    return await apiFetch<{ message: string }>('kite-callback', {
-        method: 'POST',
-        body: JSON.stringify({ request_token: requestToken }),
-    });
 };

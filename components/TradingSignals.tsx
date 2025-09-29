@@ -1,58 +1,22 @@
-
-import React, { useState, useEffect } from 'react';
-import { Paper, Typography, Box, Grid, CircularProgress, Alert, Chip } from '@mui/material';
+import React from 'react';
+import { Paper, Typography, Box, Grid, Chip } from '@mui/material';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
+import type { Signal } from '../types';
 
-interface Signal {
-  instrument: string;
-  price: number;
-  trend: string;
-  signal: string;
-  strikePrice: number;
-  premium: number;
-  expiry: string;
-  lotSize: number;
-  atm: number;
-  otm: number;
-  itm: number;
+interface TradingSignalsProps {
+  signals: Signal[];
 }
 
-const TradingSignals: React.FC = () => {
-  const [signals, setSignals] = useState<Signal[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchSignals = async () => {
-      try {
-        const response = await fetch('http://127.0.0.1:8000/api/trading-signals');
-        if (!response.ok) {
-          throw new Error('Failed to fetch trading signals');
-        }
-        const data = await response.json();
-        setSignals(data);
-      } catch (err) {
-        setError(err.message);
-      }
-      setLoading(false);
-    };
-
-    fetchSignals();
-  }, []);
-
-  if (loading) {
-    return <CircularProgress />;
-  }
-
-  if (error) {
-    return <Alert severity="error">{error}</Alert>;
+const TradingSignals: React.FC<TradingSignalsProps> = ({ signals }) => {
+  if (!signals || signals.length === 0) {
+    return <Typography>No trading signals available at the moment.</Typography>;
   }
 
   return (
     <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
       <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
-        Real-Time Trading Signals
+        AI Trading Signals
       </Typography>
       <Grid container spacing={3}>
         {signals.map((signal, index) => (
@@ -68,17 +32,8 @@ const TradingSignals: React.FC = () => {
                   <Chip icon={<TrendingDownIcon />} label="Bearish" color="error" />
                 )}
               </Box>
-              <Typography variant="body1"><strong>Current Price:</strong> {signal.price.toFixed(2)}</Typography>
               <Typography variant="body1"><strong>Signal:</strong> {signal.signal}</Typography>
-              <Typography variant="body1"><strong>Strike Price:</strong> {signal.strikePrice}</Typography>
-              <Typography variant="body1"><strong>Premium:</strong> {signal.premium}</Typography>
-              <Typography variant="body1"><strong>Expiry:</strong> {new Date(signal.expiry).toLocaleDateString()}</Typography>
-              <Typography variant="body1"><strong>Lot Size:</strong> {signal.lotSize}</Typography>
-              <Box sx={{ mt: 2 }}>
-                <Chip label={`ITM: ${signal.itm}`} sx={{ mr: 1 }} />
-                <Chip label={`ATM: ${signal.atm}`} sx={{ mr: 1 }} color="primary" />
-                <Chip label={`OTM: ${signal.otm}`} />
-              </Box>
+              <Typography variant="body1"><strong>Confidence:</strong> {signal.confidence}%</Typography>
             </Paper>
           </Grid>
         ))}
