@@ -30,4 +30,9 @@ export interface Signal {
   confidence: number;
   reasoning: string;
   technical_score: number;
+  specific_instructions: string[];
+  profit_targets: { description: string; targets: number[] };
+  time_horizon: string;
+  exit_conditions: string;
+  trail_stop_level: string;
 }
