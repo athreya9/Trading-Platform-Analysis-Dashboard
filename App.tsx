@@ -10,22 +10,22 @@ const darkTheme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#00FFFF', // Neon Cyan for primary actions/highlights
+      main: '#4ecca3',
     },
     secondary: {
-      main: '#FF00FF', // Neon Magenta for secondary actions/accents
+      main: '#ff9a3d',
     },
     background: {
-      default: '#1F1F1F', // Dark background
-      paper: '#2C2C2C',   // Slightly lighter for cards/surfaces
+      default: '#0d0d1a',
+      paper: '#1a1a2e',
     },
     text: {
-      primary: '#E0E0E0', // Light grey for main text
-      secondary: '#B0B0B0', // Slightly darker grey for secondary text
+      primary: '#eeeeee',
+      secondary: '#b0b0b0',
     },
   },
   typography: {
-    fontFamily: '"Space Grotesk", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"'
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
   },
 });
 

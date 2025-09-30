@@ -1,12 +1,13 @@
-import React from 'react';
-import { Paper, Typography, Box, Chip, Grid, CircularProgress } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Paper, Typography, Box, Chip, Grid, CircularProgress, Button, ButtonGroup } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import PsychologyIcon from '@mui/icons-material/Psychology';
 import SignalCellularAltIcon from '@mui/icons-material/SignalCellularAlt';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import StopIcon from '@mui/icons-material/Stop';
 
 interface SystemControlsProps {
-  botStatus: string;
   marketStatus: string | null;
   nextTraining: string;
   lastSignal: string;
@@ -49,11 +50,50 @@ const MarketStatus: React.FC<{ status: string | null }> = ({ status }) => {
 };
 
 export const SystemControls: React.FC<SystemControlsProps> = ({
-  botStatus,
   marketStatus,
   nextTraining,
   lastSignal
 }) => {
+  const [botStatus, setBotStatus] = useState('Stopped');
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchBotStatus = async () => {
+    try {
+      const response = await fetch('/api/bot/status');
+      const data = await response.json();
+      setBotStatus(data.status);
+    } catch (error) {
+      console.error('Error fetching bot status:', error);
+      setBotStatus('Error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBotStatus();
+    const interval = setInterval(fetchBotStatus, 5000); // Poll every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleStartBot = async () => {
+    try {
+      await fetch('/api/bot/start', { method: 'POST' });
+      fetchBotStatus();
+    } catch (error) {
+      console.error('Error starting bot:', error);
+    }
+  };
+
+  const handleStopBot = async () => {
+    try {
+      await fetch('/api/bot/stop', { method: 'POST' });
+      fetchBotStatus();
+    } catch (error) {
+      console.error('Error stopping bot:', error);
+    }
+  };
+
   return (
     <Paper elevation={3} sx={{ p: 3, flexGrow: 1 }}>
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
@@ -61,13 +101,29 @@ export const SystemControls: React.FC<SystemControlsProps> = ({
       </Typography>
       <Grid container spacing={2}>
         <Grid item xs={12}>
-          <StatusItem
-            icon={<AutoAwesomeIcon color="primary" />}
-            label="Trading Bot"
-            value={botStatus === 'running' ? 'Active - Scanning markets' : 'Paused - Waiting for market hours'}
-            chipLabel={botStatus === 'running' ? 'LIVE' : 'PAUSED'}
-            chipColor={botStatus === 'running' ? 'success' : 'default'}
-          />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, backgroundColor: 'background.paper', borderRadius: 2 }}>
+            <AutoAwesomeIcon color="primary" />
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="body1" fontWeight="medium">
+                Trading Bot
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {isLoading ? 'Loading...' : botStatus === 'Running' ? 'Active - Scanning markets' : 'Paused - Waiting for market hours'}
+              </Typography>
+            </Box>
+            {isLoading ? <CircularProgress size={24} /> : (
+              <ButtonGroup variant="contained" aria-label="outlined primary button group">
+                <Button onClick={handleStartBot} disabled={botStatus === 'Running'}>
+                  <PlayArrowIcon />
+                  Start
+                </Button>
+                <Button onClick={handleStopBot} disabled={botStatus !== 'Running'}>
+                  <StopIcon />
+                  Stop
+                </Button>
+              </ButtonGroup>
+            )}
+          </Box>
         </Grid>
         <Grid item xs={12}>
           <MarketStatus status={marketStatus} />
