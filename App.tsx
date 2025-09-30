@@ -1,48 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { createTheme, ThemeProvider, CssBaseline, Container, Grid, CircularProgress, Typography, Paper, Box, Chip } from '@mui/material';
+import { createTheme, ThemeProvider, CssBaseline, Container, Grid, CircularProgress, Typography, Paper, Box } from '@mui/material';
 import Header from './components/Header';
 import TradesTable from './components/TradesTable';
 import { fetchDashboardData } from './services/apiService';
 import TradingSignals from './components/TradingSignals';
-import { AccessTime, AutoAwesome, Psychology, SignalCellularAlt } from '@mui/icons-material';
+import { SystemControls } from './components/SystemControls';
 
 const darkTheme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#4ecca3',
+      main: '#00FFFF', // Neon Cyan for primary actions/highlights
     },
     secondary: {
-      main: '#ff9a3d',
+      main: '#FF00FF', // Neon Magenta for secondary actions/accents
     },
     background: {
-      default: '#0d0d1a',
-      paper: '#1a1a2e',
+      default: '#1F1F1F', // Dark background
+      paper: '#2C2C2C',   // Slightly lighter for cards/surfaces
     },
     text: {
-      primary: '#eeeeee',
-      secondary: '#b0b0b0',
+      primary: '#E0E0E0', // Light grey for main text
+      secondary: '#B0B0B0', // Slightly darker grey for secondary text
     },
   },
   typography: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
+    fontFamily: '"Space Grotesk", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"'
   },
 });
-
-const StatusItem: React.FC<{ icon: React.ReactNode; label: string; value: string; chipLabel?: string; chipColor?: any }> = ({ icon, label, value, chipLabel, chipColor }) => (
-  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, backgroundColor: 'background.paper', borderRadius: 2 }}>
-    {icon}
-    <Box sx={{ flex: 1 }}>
-      <Typography variant="body1" fontWeight="medium">
-        {label}
-      </Typography>
-      <Typography variant="body2" color="text.secondary">
-        {value}
-      </Typography>
-    </Box>
-    {chipLabel && <Chip label={chipLabel} color={chipColor} variant="filled" />}
-  </Box>
-);
 
 const App: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<any>(null);
@@ -89,9 +74,9 @@ const App: React.FC = () => {
     );
   }
 
-  const botStatus = dashboardData?.statuses?.find(s => s.name === 'Trading Bot')?.status === 'connected' ? 'running' : 'stopped';
-  const marketStatus = dashboardData?.signals?.length > 0 ? 'open' : 'closed'; // A simple heuristic
-  const lastSignal = dashboardData?.signals?.length > 0 ? `${dashboardData.signals[0].instrument} - ${dashboardData.signals[0].signal}` : 'N/A';
+  const liveSignals = dashboardData?.signals?.filter((s: any) => s.status === "live");
+  const marketStatus = liveSignals && liveSignals.length > 0 ? 'open' : 'closed';
+  const lastSignal = liveSignals && liveSignals.length > 0 ? `${liveSignals[0].instrument} - ${liveSignals[0].signal}` : 'N/A';
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -100,49 +85,11 @@ const App: React.FC = () => {
         <Header />
         <Grid container spacing={3}>
           <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
-            <Paper elevation={3} sx={{ p: 3, flexGrow: 1 }}>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-                System Status
-              </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <StatusItem
-                    icon={<AutoAwesome color="primary" />}
-                    label="Trading Bot"
-                    value={botStatus === 'running' ? 'Active - Scanning markets' : 'Stopped'}
-                    chipLabel={botStatus === 'running' ? 'LIVE' : 'PAUSED'}
-                    chipColor={botStatus === 'running' ? 'success' : 'default'}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <StatusItem
-                    icon={<AccessTime color="primary" />}
-                    label="Market Status"
-                    value={marketStatus === 'open' ? 'Market open - Live signals available' : 'Market closed'}
-                    chipLabel={marketStatus === 'open' ? 'OPEN' : 'CLOSED'}
-                    chipColor={marketStatus === 'open' ? 'success' : 'info'}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <StatusItem
-                    icon={<Psychology color="secondary" />}
-                    label="AI Learning Engine"
-                    value={"Next training: Next Sunday"}
-                    chipLabel="AUTO-LEARN"
-                    chipColor="secondary"
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <StatusItem
-                    icon={<SignalCellularAlt color="primary" />}
-                    label="Last Signal"
-                    value={lastSignal}
-                    chipLabel="RECENT"
-                    chipColor="primary"
-                  />
-                </Grid>
-              </Grid>
-            </Paper>
+            <SystemControls
+              marketStatus={marketStatus}
+              nextTraining={"Next Sunday"}
+              lastSignal={lastSignal}
+            />
           </Grid>
           <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
             {dashboardData && dashboardData.trades && dashboardData.trades.length > 0 ? (
@@ -154,11 +101,18 @@ const App: React.FC = () => {
               </Paper>
             )}
           </Grid>
-          {dashboardData && dashboardData.signals && (
-            <Grid item xs={12}>
-              <TradingSignals signals={dashboardData.signals} />
-            </Grid>
-          )}
+          <Grid item xs={12}>
+             {liveSignals && liveSignals.length > 0 ? (
+              <TradingSignals signals={liveSignals} />
+            ) : (
+              <Paper elevation={3} sx={{ p: 3, flexGrow: 1, textAlign: 'center' }}>
+                <Typography variant="h6">No Live Signals</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  No live signals available. Market may be closed or in dry-run mode.
+                </Typography>
+              </Paper>
+            )}
+          </Grid>
         </Grid>
       </Container>
     </ThemeProvider>

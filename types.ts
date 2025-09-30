@@ -1,4 +1,3 @@
-
 export type StatusType = 'connected' | 'disconnected' | 'warning';
 
 export interface Status {
@@ -23,10 +22,11 @@ export interface AiSignalData {
   }[];
 }
 
-export interface Signal {
+// Existing Signal renamed to StockSignal
+export interface StockSignal {
   instrument: string;
   trend: string;
-  signal: string;
+  signal: string; // e.g., BUY, AVOID, HOLD
   confidence: number;
   reasoning: string;
   technical_score: number;
@@ -35,4 +35,26 @@ export interface Signal {
   time_horizon: string;
   exit_conditions: string;
   trail_stop_level: string;
+  // Added status and generated_at from backend changes
+  status?: "live" | "dry_run";
+  generated_at?: string;
 }
+
+// New interface for Option Signals, matching GenZSignalCardProps
+export interface OptionSignal {
+  symbol: string; // e.g., BANKNIFTY24SEP48000CE
+  type: string; // e.g., Call Option, Put Option
+  entry: number;
+  stoploss: number;
+  targets: number[];
+  expiry: string; // Date string
+  confidence: number;
+  hold_till: string; // Date string
+  reasoning: string;
+  // Added status and generated_at from backend changes
+  status?: "live" | "dry_run";
+  generated_at?: string;
+}
+
+// Union type for all possible signals
+export type Signal = StockSignal | OptionSignal;
