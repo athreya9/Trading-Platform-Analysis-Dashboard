@@ -4,7 +4,6 @@ import Header from './components/Header';
 import { SystemControls } from './components/SystemControls';
 import TradesTable from './components/TradesTable';
 import { fetchDashboardData } from './services/apiService';
-import { checkIndianMarketHours } from './src/utils/marketHours';
 import TradingSignals from './components/TradingSignals';
 
 const darkTheme = createTheme({
@@ -32,17 +31,6 @@ const darkTheme = createTheme({
 
 const App: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<any>(null);
-  const [systemStatus, setSystemStatus] = useState<{
-    botStatus: string;
-    marketStatus: string | null;
-    nextTraining: string;
-    lastSignal: string;
-  }>({
-    botStatus: 'stopped',
-    marketStatus: null, // Initial state: loading
-    nextTraining: 'Next Monday',
-    lastSignal: ''
-  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,38 +39,36 @@ const App: React.FC = () => {
       try {
         const data = await fetchDashboardData();
         setDashboardData(data);
-        setSystemStatus(determineSystemStatus());
-        setLoading(false);
       } catch (error) {
         console.error('Failed to load dashboard data:', error);
         setError('Failed to load dashboard data. Please try again later.');
+      } finally {
         setLoading(false);
       }
     };
 
     loadData();
-    const interval = setInterval(loadData, 60000);
+    const interval = setInterval(loadData, 60000); // Refresh every 60 seconds
     return () => clearInterval(interval);
   }, []);
 
-  const determineSystemStatus = () => {
-    const isMarketOpen = checkIndianMarketHours(new Date());
+  const getSystemStatus = () => {
+    if (!dashboardData) {
+      return {
+        botStatus: 'stopped',
+        marketStatus: 'closed',
+        nextTraining: 'N/A',
+        lastSignal: 'N/A'
+      };
+    }
+    const botStatus = dashboardData.statuses.find(s => s.name === 'Trading Bot')?.status === 'connected' ? 'running' : 'stopped';
+    const marketStatus = dashboardData.statuses.find(s => s.name === 'Data Source')?.status === 'connected' ? 'open' : 'closed';
     return {
-      botStatus: isMarketOpen ? 'running' : 'stopped',
-      marketStatus: isMarketOpen ? 'open' : 'closed',
-      nextTraining: getNextTrainingDay(),
-      lastSignal: getLastSignalTime()
+      botStatus,
+      marketStatus,
+      nextTraining: 'Next Sunday', // This can be made dynamic later
+      lastSignal: dashboardData.trades.length > 0 ? `${dashboardData.trades[0].ticker} - ${dashboardData.trades[0].type}` : 'N/A'
     };
-  };
-
-  const getNextTrainingDay = () => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const nextMonday = days[(new Date().getDay() + 1) % 7];
-    return `Next ${nextMonday}`;
-  };
-
-  const getLastSignalTime = () => {
-    return 'BANKNIFTY CE - 2 hours ago';
   };
 
   if (loading) {
@@ -107,6 +93,8 @@ const App: React.FC = () => {
     );
   }
 
+  const systemStatus = getSystemStatus();
+
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
@@ -122,7 +110,7 @@ const App: React.FC = () => {
             />
           </Grid>
           <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
-            {dashboardData ? (
+            {dashboardData && dashboardData.trades.length > 0 ? (
               <TradesTable trades={dashboardData.trades} />
             ) : (
               <Typography>No trade data available.</Typography>
