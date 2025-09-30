@@ -52,25 +52,6 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const getSystemStatus = () => {
-    if (!dashboardData) {
-      return {
-        botStatus: 'stopped',
-        marketStatus: 'closed',
-        nextTraining: 'N/A',
-        lastSignal: 'N/A'
-      };
-    }
-    const botStatus = dashboardData.statuses.find(s => s.name === 'Trading Bot')?.status === 'connected' ? 'running' : 'stopped';
-    const marketStatus = dashboardData.statuses.find(s => s.name === 'Data Source')?.status === 'connected' ? 'open' : 'closed';
-    return {
-      botStatus,
-      marketStatus,
-      nextTraining: 'Next Sunday', // This can be made dynamic later
-      lastSignal: dashboardData.trades.length > 0 ? `${dashboardData.trades[0].ticker} - ${dashboardData.trades[0].type}` : 'N/A'
-    };
-  };
-
   if (loading) {
     return (
       <ThemeProvider theme={darkTheme}>
@@ -93,7 +74,8 @@ const App: React.FC = () => {
     );
   }
 
-  const systemStatus = getSystemStatus();
+  const botStatus = dashboardData?.statuses?.find(s => s.name === 'Trading Bot')?.status === 'connected' ? 'running' : 'stopped';
+  const marketStatus = dashboardData?.statuses?.find(s => s.name === 'Data Source')?.status === 'connected' ? 'open' : 'closed';
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -103,14 +85,14 @@ const App: React.FC = () => {
         <Grid container spacing={3}>
           <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
             <SystemControls
-              botStatus={systemStatus.botStatus}
-              marketStatus={systemStatus.marketStatus}
-              nextTraining={systemStatus.nextTraining}
-              lastSignal={systemStatus.lastSignal}
+              botStatus={botStatus}
+              marketStatus={marketStatus}
+              nextTraining={"Next Sunday"}
+              lastSignal={dashboardData?.trades?.length > 0 ? `${dashboardData.trades[0].ticker} - ${dashboardData.trades[0].type}` : 'N/A'}
             />
           </Grid>
           <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
-            {dashboardData && dashboardData.trades.length > 0 ? (
+            {dashboardData && dashboardData.trades && dashboardData.trades.length > 0 ? (
               <TradesTable trades={dashboardData.trades} />
             ) : (
               <Typography>No trade data available.</Typography>
