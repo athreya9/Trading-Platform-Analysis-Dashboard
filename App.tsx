@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { createTheme, ThemeProvider, CssBaseline, Container, Grid, CircularProgress, Typography } from '@mui/material';
+import { createTheme, ThemeProvider, CssBaseline, Container, Grid, CircularProgress, Typography, Paper, Box, Chip } from '@mui/material';
 import Header from './components/Header';
-import { SystemControls } from './components/SystemControls';
 import TradesTable from './components/TradesTable';
 import { fetchDashboardData } from './services/apiService';
 import TradingSignals from './components/TradingSignals';
+import { AccessTime, AutoAwesome, Psychology, SignalCellularAlt } from '@mui/icons-material';
 
 const darkTheme = createTheme({
   palette: {
@@ -28,6 +28,21 @@ const darkTheme = createTheme({
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
   },
 });
+
+const StatusItem: React.FC<{ icon: React.ReactNode; label: string; value: string; chipLabel?: string; chipColor?: any }> = ({ icon, label, value, chipLabel, chipColor }) => (
+  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, backgroundColor: 'background.paper', borderRadius: 2 }}>
+    {icon}
+    <Box sx={{ flex: 1 }}>
+      <Typography variant="body1" fontWeight="medium">
+        {label}
+      </Typography>
+      <Typography variant="body2" color="text.secondary">
+        {value}
+      </Typography>
+    </Box>
+    {chipLabel && <Chip label={chipLabel} color={chipColor} variant="filled" />}
+  </Box>
+);
 
 const App: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<any>(null);
@@ -75,7 +90,8 @@ const App: React.FC = () => {
   }
 
   const botStatus = dashboardData?.statuses?.find(s => s.name === 'Trading Bot')?.status === 'connected' ? 'running' : 'stopped';
-  const marketStatus = dashboardData?.statuses?.find(s => s.name === 'Data Source')?.status === 'connected' ? 'open' : 'closed';
+  const marketStatus = dashboardData?.signals?.length > 0 ? 'open' : 'closed'; // A simple heuristic
+  const lastSignal = dashboardData?.signals?.length > 0 ? `${dashboardData.signals[0].instrument} - ${dashboardData.signals[0].signal}` : 'N/A';
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -84,18 +100,58 @@ const App: React.FC = () => {
         <Header />
         <Grid container spacing={3}>
           <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
-            <SystemControls
-              botStatus={botStatus}
-              marketStatus={marketStatus}
-              nextTraining={"Next Sunday"}
-              lastSignal={dashboardData?.trades?.length > 0 ? `${dashboardData.trades[0].ticker} - ${dashboardData.trades[0].type}` : 'N/A'}
-            />
+            <Paper elevation={3} sx={{ p: 3, flexGrow: 1 }}>
+              <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                System Status
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <StatusItem
+                    icon={<AutoAwesome color="primary" />}
+                    label="Trading Bot"
+                    value={botStatus === 'running' ? 'Active - Scanning markets' : 'Stopped'}
+                    chipLabel={botStatus === 'running' ? 'LIVE' : 'PAUSED'}
+                    chipColor={botStatus === 'running' ? 'success' : 'default'}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <StatusItem
+                    icon={<AccessTime color="primary" />}
+                    label="Market Status"
+                    value={marketStatus === 'open' ? 'Market open - Live signals available' : 'Market closed'}
+                    chipLabel={marketStatus === 'open' ? 'OPEN' : 'CLOSED'}
+                    chipColor={marketStatus === 'open' ? 'success' : 'info'}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <StatusItem
+                    icon={<Psychology color="secondary" />}
+                    label="AI Learning Engine"
+                    value={"Next training: Next Sunday"}
+                    chipLabel="AUTO-LEARN"
+                    chipColor="secondary"
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <StatusItem
+                    icon={<SignalCellularAlt color="primary" />}
+                    label="Last Signal"
+                    value={lastSignal}
+                    chipLabel="RECENT"
+                    chipColor="primary"
+                  />
+                </Grid>
+              </Grid>
+            </Paper>
           </Grid>
           <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
             {dashboardData && dashboardData.trades && dashboardData.trades.length > 0 ? (
               <TradesTable trades={dashboardData.trades} />
             ) : (
-              <Typography>No trade data available.</Typography>
+              <Paper elevation={3} sx={{ p: 3, flexGrow: 1, textAlign: 'center' }}>
+                <Typography variant="h6">No Recent Trades</Typography>
+                <Typography variant="body2" color="text.secondary">The trade log is currently empty.</Typography>
+              </Paper>
             )}
           </Grid>
           {dashboardData && dashboardData.signals && (
