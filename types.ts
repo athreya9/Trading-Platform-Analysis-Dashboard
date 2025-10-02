@@ -51,8 +51,8 @@ export interface OptionSignal {
   confidence: number;
   hold_till: string; // Date string
   reasoning: string;
-  // Added status and generated_at from backend changes
-  status?: "live" | "dry_run";
+  action: string; // This is the action (e.g., "Buy")
+  status?: "live" | "dry_run"; // This is the live/inactive status
   generated_at?: string;
 }
 
