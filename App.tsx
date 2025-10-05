@@ -5,6 +5,7 @@ import TradesTable from './components/TradesTable';
 import { fetchDashboardData } from './services/apiService';
 import TradingSignals from './components/TradingSignals';
 import { SystemControls } from './components/SystemControls';
+import { isMarketOpen } from './utils/marketHours';
 
 const darkTheme = createTheme({
   palette: {
@@ -75,7 +76,7 @@ const App: React.FC = () => {
   }
 
   const liveSignals = dashboardData?.signals?.filter((s: any) => s.status === "live");
-  const marketStatus = liveSignals && liveSignals.length > 0 ? 'open' : 'closed';
+  const marketStatus = isMarketOpen() ? 'open' : 'closed';
   const lastSignal = liveSignals && liveSignals.length > 0 ? `${liveSignals[0].instrument} - ${liveSignals[0].signal}` : 'N/A';
 
   return (
