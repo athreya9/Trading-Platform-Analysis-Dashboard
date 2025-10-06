@@ -38,6 +38,7 @@ export interface StockSignal {
   // Added status and generated_at from backend changes
   status?: "live" | "dry_run";
   generated_at?: string;
+  category?: "Equity"; // Added category
 }
 
 // New interface for Option Signals, matching GenZSignalCardProps
@@ -54,6 +55,7 @@ export interface OptionSignal {
   action: string; // This is the action (e.g., "Buy")
   status?: "live" | "dry_run"; // This is the live/inactive status
   generated_at?: string;
+  category?: "Options"; // Added category
 }
 
 // Union type for all possible signals

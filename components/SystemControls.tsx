@@ -6,6 +6,7 @@ import PsychologyIcon from '@mui/icons-material/Psychology';
 import SignalCellularAltIcon from '@mui/icons-material/SignalCellularAlt';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop';
+import { API_BASE_URL } from '../config'; // Import API_BASE_URL
 
 interface SystemControlsProps {
   marketStatus: string | null;
@@ -59,7 +60,7 @@ export const SystemControls: React.FC<SystemControlsProps> = ({
 
   const fetchBotStatus = async () => {
     try {
-      const response = await fetch('/api/bot/status');
+      const response = await fetch(`${API_BASE_URL}/api/bot/status`); // Updated URL
       const data = await response.json();
       setBotStatus(data.status);
     } catch (error) {
@@ -77,8 +78,12 @@ export const SystemControls: React.FC<SystemControlsProps> = ({
   }, []);
 
   const handleStartBot = async () => {
+    if (marketStatus !== 'open') {
+      alert('Cannot start bot: Market is currently closed.'); // Simple alert for now
+      return;
+    }
     try {
-      await fetch('/api/bot/start', { method: 'POST' });
+      await fetch(`${API_BASE_URL}/api/bot/start`, { method: 'POST' }); // Updated URL
       fetchBotStatus();
     } catch (error) {
       console.error('Error starting bot:', error);
@@ -87,7 +92,7 @@ export const SystemControls: React.FC<SystemControlsProps> = ({
 
   const handleStopBot = async () => {
     try {
-      await fetch('/api/bot/stop', { method: 'POST' });
+      await fetch(`${API_BASE_URL}/api/bot/stop`, { method: 'POST' }); // Updated URL
       fetchBotStatus();
     } catch (error) {
       console.error('Error stopping bot:', error);
@@ -108,7 +113,7 @@ export const SystemControls: React.FC<SystemControlsProps> = ({
                 Trading Bot
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {isLoading ? 'Loading...' : botStatus === 'Running' ? 'Active - Scanning markets' : 'Paused - Waiting for market hours'}
+                {isLoading ? 'Loading...' : botStatus === 'running' ? 'Active - Scanning markets' : 'Paused - Waiting for market hours'}
               </Typography>
             </Box>
             {isLoading ? <CircularProgress size={24} /> : (

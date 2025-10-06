@@ -5,7 +5,7 @@ import TradesTable from './components/TradesTable';
 import { fetchDashboardData } from './services/apiService';
 import TradingSignals from './components/TradingSignals';
 import { SystemControls } from './components/SystemControls';
-import { isMarketOpen } from './utils/marketHours';
+import { isMarketOpen } from './src/utils/marketHours';
 
 const darkTheme = createTheme({
   palette: {
@@ -103,16 +103,7 @@ const App: React.FC = () => {
             )}
           </Grid>
           <Grid item xs={12}>
-             {liveSignals && liveSignals.length > 0 ? (
-              <TradingSignals signals={liveSignals} />
-            ) : (
-              <Paper elevation={3} sx={{ p: 3, flexGrow: 1, textAlign: 'center' }}>
-                <Typography variant="h6">No Live Signals</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  No live signals available. Market may be closed or in dry-run mode.
-                </Typography>
-              </Paper>
-            )}
+            <TradingSignals signals={liveSignals} />
           </Grid>
         </Grid>
       </Container>
