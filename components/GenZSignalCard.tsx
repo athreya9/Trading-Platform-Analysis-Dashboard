@@ -1,5 +1,6 @@
 import React from "react";
 import { Signal, StockSignal, OptionSignal } from '../types'; // Import types
+import TradeChart from './TradeChart'; // Added import
 
 interface GenZSignalCardProps {
   signal: Signal; // Now accepts the union type
@@ -59,6 +60,13 @@ const GenZSignalCard: React.FC<GenZSignalCardProps> = ({ signal }) => {
           </ul>
         )}
       </div>
+
+      {/* Conditionally render chart for live stock signals */}
+      {isStockSignal(signal) && signal.status === "live" && (
+        <div className="mt-4">
+          <TradeChart symbol={signal.instrument} />
+        </div>
+      )}
     </div>
   );
 };
