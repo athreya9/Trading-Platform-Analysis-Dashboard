@@ -104,6 +104,13 @@ const App: React.FC = () => {
           </Grid>
           <Grid item xs={12}>
             <TradingSignals signals={liveSignals} />
+            {/* Live Refresh Indicator */}
+            <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', color: 'text.secondary' }}>
+              <div className="flex items-center space-x-2 text-sm text-gray-500">
+                <div className="animate-pulse w-2 h-2 bg-green-400 rounded-full"></div>
+                <span>Updated every 60 seconds</span> {/* Changed from 15 min to 60 seconds as per useEffect interval */}
+              </div>
+            </Box>
           </Grid>
         </Grid>
       </Container>

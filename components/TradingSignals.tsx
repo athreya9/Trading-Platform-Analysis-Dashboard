@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from "framer-motion"; // Added import
 import { Paper, Typography, Box, Grid } from '@mui/material';
 import type { Signal, StockSignal, OptionSignal } from '../types';
 import GenZSignalCard from './GenZSignalCard';
@@ -59,7 +60,13 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ signals }) => {
         {filteredSignals.length > 0 ? (
           filteredSignals.map((signal, index) => (
             <Grid item xs={12} md={6} lg={4} key={index}>
-              <GenZSignalCard signal={signal} />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                <GenZSignalCard signal={signal} />
+              </motion.div>
             </Grid>
           ))
         ) : (
