@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; // Added a comment to trigger redeploy
 import { createTheme, ThemeProvider, CssBaseline, Container, Grid, CircularProgress, Typography, Paper, Box } from '@mui/material';
 import Header from './components/Header';
 import TradesTable from './components/TradesTable';
